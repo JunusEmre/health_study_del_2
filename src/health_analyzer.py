@@ -177,3 +177,69 @@ class HealthDataAnalyzer:
             
         else:
             raise ValueError("Metoden måste vara 'normal' eller 'bootstrap'.")
+        
+    def run_hypothesis_test(self, alpha: float = 0.05) -> Dict:
+        """
+        Testar hypotesen: "Rökare har högre medel-blodtryck än icke-rökare."
+        Använder oberoende t-test (Welch's).
+        """
+        roakare_bp = self.df[self.df['smoker'] == 'Yes']['systolic_bp']
+        icke_roakare_bp = self.df[self.df['smoker'] == 'No']['systolic_bp']
+        
+        medel_roakare = roakare_bp.mean()
+        medel_icke_roakare = icke_roakare_bp.mean()
+        
+        # T-test, ensidigt (alternative='greater') och Welch's (equal_var=False)
+        t_stat, p_value = stats.ttest_ind(
+            roakare_bp,
+            icke_roakare_bp,
+            equal_var=False,
+            alternative='greater'
+        )
+        
+        # Sammanfatta resultat
+        slutsats = "Förkasta nollhypotesen (H0)." if p_value < alpha else "Behåll nollhypotesen (H0)."
+        
+        return {
+            "medel_roakare": medel_roakare,
+            "medel_icke_roakare": medel_icke_roakare,
+            "t_stat": t_stat,
+            "p_value": p_value,
+            "alpha": alpha,
+            "slutsats": slutsats
+        }
+    
+    def run_power_simulation(self, iterations: int = 1000, alpha: float = 0.05) -> float:
+        """
+        Simulerar testets statistiska styrka (Power) baserat på observerade parametrar.
+        """
+        resultat_test = self.run_hypothesis_test(alpha=alpha)
+        
+        n_roakare = len(self.df[self.df['smoker'] == 'Yes'])
+        n_icke_roakare = len(self.df[self.df['smoker'] == 'No'])
+        std_roakare = self.df[self.df['smoker'] == 'Yes']['systolic_bp'].std()
+        std_icke_roakare = self.df[self.df['smoker'] == 'No']['systolic_bp'].std()
+
+        medel_icke_roakare_sanning = resultat_test['medel_icke_roakare']
+        medel_roakare_sanning = resultat_test['medel_roakare']
+        
+        antal_avslag = 0 
+
+        for _ in range(iterations):
+            # Skapa simulerad data med den antagna sanna skillnaden
+            sim_roakare_bp = np.random.normal(loc=medel_roakare_sanning, scale=std_roakare, size=n_roakare)
+            sim_icke_roakare_bp = np.random.normal(loc=medel_icke_roakare_sanning, scale=std_icke_roakare, size=n_icke_roakare)
+            
+            # Utför t-testet (ensidigt: 'greater')
+            t_stat_sim, p_value_sim = stats.ttest_ind(
+                sim_roakare_bp,
+                sim_icke_roakare_bp,
+                equal_var=False,
+                alternative='greater'
+            )
+            
+            if p_value_sim < alpha:
+                antal_avslag += 1
+
+        power = antal_avslag / iterations
+        return power
