@@ -118,3 +118,62 @@ class HealthDataAnalyzer:
         plt.show()
         
         return "Alla 3 grafer har skapats och sparats i PNG-filer samt visats i notebooken."
+    def run_simulation(self, sample_size: int = 1000) -> Dict[str, float]:
+        """
+        Simulerar slumpade personer baserat på datasetets sjukdomssannolikhet.
+        """
+        verklig_andel = self.df['disease'].mean()
+        
+        # Simulera med samma sannolikhet för sjukdom
+        simulerade_resultat = np.random.choice(
+            [0, 1],
+            size=sample_size,
+            p=[1 - verklig_andel, verklig_andel]
+        )
+        
+        simulerad_andel = np.mean(simulerade_resultat)
+        
+        return {
+            "verklig_andel": verklig_andel * 100,
+            "simulerad_andel": simulerad_andel * 100,
+            "sample_size": sample_size
+        }
+
+    def calculate_ci(self, method: str = 'normal', conf_level: float = 0.95) -> Dict[str, float]:
+        """
+        Beräknar konfidensintervallet för medelvärdet av systolic_bp.
+        :param method: 'normal' (Normalapproximation) eller 'bootstrap'.
+        """
+        data_bp = self.df['systolic_bp'].values
+        
+        if method == 'normal':
+            medelvarde = data_bp.mean()
+            standardavvikelse = data_bp.std()
+            standardfel = standardavvikelse / np.sqrt(len(data_bp))
+            
+            # Använd Scipy för Z-baserat konfidensintervall (för stort N)
+            nedre, ovre = stats.norm.interval(
+                conf_level,
+                loc=medelvarde,
+                scale=standardfel
+            )
+            return {"nedre_grans": nedre, "ovre_grans": ovre, "metod": "Normalapproximation", "medel": medelvarde}
+            
+        elif method == 'bootstrap':
+            antal_aterupprepningar = 10000 
+            bootstrap_medel = []
+            
+            for _ in range(antal_aterupprepningar):
+                bootstrap_sample = np.random.choice(data_bp, size=len(data_bp), replace=True)
+                bootstrap_medel.append(np.mean(bootstrap_sample))
+            
+            medelvarde = data_bp.mean()
+            
+            # Beräkna percentiler för 95% CI
+            nedre = np.percentile(bootstrap_medel, (1 - conf_level) / 2 * 100)
+            ovre = np.percentile(bootstrap_medel, (1 + conf_level) / 2 * 100)
+            
+            return {"nedre_grans": nedre, "ovre_grans": ovre, "metod": "Bootstrap", "medel": medelvarde}
+            
+        else:
+            raise ValueError("Metoden måste vara 'normal' eller 'bootstrap'.")
