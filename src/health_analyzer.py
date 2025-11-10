@@ -6,6 +6,11 @@ from scipy import stats
 from typing import Dict, Tuple, List
 import os
 
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+
 class HealthDataAnalyzer:
     """
     Klass för att utföra grundläggande och avancerade analyser
@@ -65,6 +70,32 @@ class HealthDataAnalyzer:
                   f"- Datan är nu redo för analys.")
         return result
     
+    # --- NY METOD FÖR DEL 2 (Datapreprocessing) ---
+
+    def data_preprocessing(self) -> str:
+        """
+        Förbereder datan för maskininlärning genom standardisering och one-hot encoding.
+        Detta är ett viktigt steg i analys-pipelinen.
+        """
+        df_model = self.df.copy()
+
+        # 1. One-Hot Encoding av kategoriska variabler
+        df_model = pd.get_dummies(df_model, columns=['sex', 'smoker'], drop_first=True)
+        df_model.drop(columns=['id'], inplace=True)
+        df_model.rename(columns={'sex_M': 'sex_Male', 'smoker_Yes': 'smoker_Yes'}, inplace=True)
+        
+        # 2. Standardisering (Scaling) av numeriska variabler
+        numeric_cols = ['age', 'height', 'weight', 'systolic_bp', 'cholesterol']
+        
+        scaler = StandardScaler()
+        df_model[numeric_cols] = scaler.fit_transform(df_model[numeric_cols])
+        
+        # Lagra den bearbetade datan som ett nytt attribut
+        self.df_processed = df_model
+        
+        return "Data standardiserad och kodad (One-Hot Encoded) för modellering i self.df_processed."
+
+
     def get_descriptive_stats(self, columns: List[str]) -> pd.DataFrame:
         """
         Beräknar medel, median, min och max för specificerade kolumner.
