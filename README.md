@@ -7,18 +7,19 @@ The code is structured modularly using a Python class (HealthDataAnalyzer) to ke
 
 ## Project Structure
 
-
-
+```
 health_study_del_1
 ├── src/
-│ ├── init.py
-│ └── health_analyzer.py # Python Class with all cleaning and analysis logic
-├── data/ # Holds the raw CSV data
-│ └── health_study_dataset.csv
-├── plots/ # Generated output (PNG graphs)
-├── Health_Study_Notebook.ipynb # Main document showing results and calling the class
-├── README.md # This file
-└── requirements.txt # Project dependencies
+│   ├── __init__.py
+│   └── health_analyzer.py        # Python Class with all cleaning and analysis logic
+├── data/                         # Holds the raw CSV data
+│   └── health_study_dataset.csv
+├── plots/                        # Generated output (PNG graphs)
+├── Health_Study_Notebook.ipynb   # Main document showing results and calling the class
+├── README.md                     # This file
+└── requirements.txt              # Project dependencies
+```
+
 
 # Setup and Execution
 The project environment was built using Python 3.11.9, as required for our course setup.
