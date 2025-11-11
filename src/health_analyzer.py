@@ -149,6 +149,51 @@ class HealthDataAnalyzer:
         plt.show()
         
         return "Alla 3 grafer har skapats och sparats i PNG-filer samt visats i notebooken."
+    
+    # --- NY METOD FÖR DEL 2 (Utökad Visualisering) ---
+    def plot_bp_vs_age_disease(self) -> str:
+        """
+        Visualiserar sambandet mellan ålder och systoliskt blodtryck, färgkodat
+        efter sjukdomsstatus.
+        """
+        if not os.path.exists(self.PLOT_DIR):
+            os.makedirs(self.PLOT_DIR)
+
+        plt.figure(figsize=(10, 7))
+        
+        sns.scatterplot(
+            x='age', 
+            y='systolic_bp', 
+            hue='disease', 
+            data=self.df, 
+            palette={0: 'skyblue', 1: 'darkred'},
+            alpha=0.6,
+            s=50 
+        )
+        
+        # Lägg till en trendlinje för att visa det övergripande sambandet
+        sns.regplot(
+            x='age', 
+            y='systolic_bp', 
+            data=self.df, 
+            scatter=False, 
+            color='black',
+            line_kws={'linestyle': '--', 'alpha': 0.5, 'label': 'Övergripande trend'}
+        )
+        
+        plt.title('Samband mellan Ålder, Blodtryck och Sjukdomsstatus', fontsize=14)
+        plt.xlabel('Ålder (år)', fontsize=12)
+        plt.ylabel('Systoliskt Blodtryck', fontsize=12)
+        plt.legend(title='Sjukdom', labels=['Inget', 'Sjukdom', 'Övergripande trend'])
+        plt.grid(axis='y', alpha=0.3)
+
+        save_path = os.path.join(self.PLOT_DIR, 'graf_4_bp_vs_age_disease.png')
+        plt.savefig(save_path)
+        plt.show() 
+        plt.close()
+        
+        return f"Grafer har skapats och sparats i katalogen '{self.PLOT_DIR}/'."
+    
     def run_simulation(self, sample_size: int = 1000) -> Dict[str, float]:
         """
         Simulerar slumpade personer baserat på datasetets sjukdomssannolikhet.
