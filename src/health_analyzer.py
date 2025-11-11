@@ -319,3 +319,48 @@ class HealthDataAnalyzer:
 
         power = antal_avslag / iterations
         return power
+    
+    # --- NY METOD FÖR DEL 2 (Linjär Algebra / Multipel Regression) ---
+    def run_multiple_regression(self) -> Dict:
+        """
+        Utför multipel linjär regression för att förutsäga systoliskt blodtryck
+        baserat på ålder, vikt, kolesterol, kön och rökning.
+        (Uppfyller G-krav: Linjär Algebra i praktiken och VG-krav: Avancerad metod).
+        """
+        if self.df_processed is None:
+            # Kör preprocessing om det inte redan har gjorts
+            self.data_preprocessing()
+            
+        # Välj funktioner (X) och målvariabel (Y) från standardiserad data
+        features = ['age', 'weight', 'cholesterol', 'sex_Male', 'smoker_Yes']
+        target = 'systolic_bp'
+        
+        X = self.df_processed[features]
+        Y = self.df_processed[target]
+        
+        # Dela upp i tränings- och testdata (god praxis)
+        X_train, X_test, Y_train, Y_test = train_test_split(
+            X, Y, test_size=0.2, random_state=42
+        )
+        
+        # Skapa och träna modellen (Linjär Regression löser systemet via Linjär Algebra)
+        model = LinearRegression()
+        model.fit(X_train, Y_train)
+        
+        # Gör förutsägelser och utvärdera
+        Y_pred = model.predict(X_test)
+        
+        mse = mean_squared_error(Y_test, Y_pred)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(Y_test, Y_pred)
+        
+        # Sammanställ resultat
+        results = {
+            "koefficienter": dict(zip(features, model.coef_)),
+            "intercept": model.intercept_,
+            "R2_Score": r2,
+            "RMSE": rmse,
+            "MSE": mse
+        }
+        
+        return results
